@@ -73,6 +73,23 @@ if __name__ == "__main__":
     codes = get_constituents()
 
     bs.login()  # Login before fetching data
+
+    # Check if today is a trading day
+    rs = bs.query_trade_dates(start_date=target_date, end_date=target_date)
+    is_trading_day = False
+    if rs.error_code == '0' and rs.next():
+        row = rs.get_row_data()
+        # row[1] is is_trading_day (0 or 1)
+        if row[1] == '1':
+            is_trading_day = True
+
+    if not is_trading_day:
+        print(f"{target_date} is not a trading day. Skipping update.")
+        bs.logout()
+        # Create empty file to avoid errors in CI
+        open(OUTPUT_SQL_FILE, 'w').close()
+        exit(0)
+
     df = fetch_daily_data(codes, target_date)
     bs.logout()
     
