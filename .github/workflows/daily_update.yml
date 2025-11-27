@@ -52,8 +52,8 @@ jobs:
           # but usually wrangler needs a config file or at least account_id.
           # Here we assume a wrangler.toml exists in the repo or we create a minimal one.
           
-          echo "name = \"stock-data\"" > wrangler.toml
-          echo "d1_databases = [{ binding = \"DB\", database_name = \"stock-data\", database_id = \"${{ secrets.D1_DATABASE_ID }}\" }]" >> wrangler.toml
+          echo "name = \"stock\"" > wrangler.toml
+          echo "d1_databases = [{ binding = \"DB\", database_name = \"stock\", database_id = \"${{ secrets.D1_DATABASE_ID }}\" }]" >> wrangler.toml
           
           # Execute the SQL file
-          wrangler d1 execute stock-data --file=update.sql
+          wrangler d1 execute stock --file=update.sql
