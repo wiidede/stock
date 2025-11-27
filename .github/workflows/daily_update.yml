@@ -3,7 +3,7 @@ name: Daily Stock Data Update
 on:
   schedule:
     # Run at 10:00 UTC (18:00 Beijing Time) every day
-    - cron: '0 10 * * *'
+    - cron: '13 10 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
