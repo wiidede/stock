@@ -1,0 +1,63 @@
+name: Daily Stock Data Update
+
+on:
+  schedule:
+    # Run at 10:00 UTC (18:00 Beijing Time) every day
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-d1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        run: |
+          pip install baostock pandas
+
+      - name: Generate Update SQL
+        run: |
+          python update_d1.py
+
+      - name: Check if update.sql is empty
+        id: check_sql
+        run: |
+          if [ -s update.sql ]; then
+            echo "has_data=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_data=false" >> $GITHUB_OUTPUT
+            echo "No data to update."
+          fi
+
+      - name: Setup Node.js (for Wrangler)
+        if: steps.check_sql.outputs.has_data == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Wrangler
+        if: steps.check_sql.outputs.has_data == 'true'
+        run: npm install -g wrangler
+
+      - name: Execute SQL on D1
+        if: steps.check_sql.outputs.has_data == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Ensure wrangler.toml exists or pass config via flags if possible, 
+          # but usually wrangler needs a config file or at least account_id.
+          # Here we assume a wrangler.toml exists in the repo or we create a minimal one.
+          
+          echo "name = \"stock-data\"" > wrangler.toml
+          echo "d1_databases = [{ binding = \"DB\", database_name = \"stock-data\", database_id = \"${{ secrets.D1_DATABASE_ID }}\" }]" >> wrangler.toml
+          
+          # Execute the SQL file
+          wrangler d1 execute stock-data --file=update.sql
