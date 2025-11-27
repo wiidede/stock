@@ -15,8 +15,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v6
-        with:
-          python-version: '3.9'
 
       - name: Install Python dependencies
         run: |
@@ -39,8 +37,6 @@ jobs:
       - name: Setup Node.js (for Wrangler)
         if: steps.check_sql.outputs.has_data == 'true'
         uses: actions/setup-node@v6
-        with:
-          node-version: '18'
 
       - name: Install Wrangler
         if: steps.check_sql.outputs.has_data == 'true'
